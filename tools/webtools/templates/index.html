@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务管理系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --border-color: #dee2e6;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        header h1 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.8rem;
+        }
+
+        header h1 i {
+            font-size: 1.5rem;
+        }
+
+        .stats-card {
+            display: flex;
+            justify-content: space-between;
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-title {
+            font-size: 1.4rem;
+            color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title i {
+            color: var(--primary-color);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid #ccc;
+            color: #666;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+
+        .btn-warning:hover {
+            background-color: #e67e22;
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+        .btn-outline:hover {
+            background-color: #f8f9fa;
+            border-color: #999;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            position: -webkit-sticky;
+            position: sticky;
+            top: 0;
+            background-color: white;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-radius: 10px 10px 0 0;
+        }
+
+        .tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            background-color: #f8f9fa;
+            border: none;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab.active {
+            background-color: white;
+            border-bottom: 3px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .tab:hover:not(.active) {
+            background-color: #e9ecef;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .sort-controls, .filter-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-label {
+            font-weight: 500;
+            color: var(--dark-color);
+        }
+
+        .todo-list {
+            list-style: none;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .todo-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .todo-item.completed {
+            background-color: #f0f8ff;
+        }
+
+        .todo-checkbox {
+            margin-right: 15px;
+        }
+
+        .todo-checkbox input {
+            width: auto;
+        }
+
+        .todo-content {
+            flex-grow: 1;
+            margin-right: 15px;
+        }
+
+        .todo-content.completed {
+            text-decoration: line-through;
+            color: #888;
+        }
+
+        .task-number {
+            font-weight: bold;
+            color: var(--primary-color);
+            min-width: 30px;
+            text-align: center;
+            margin-right: 15px;
+        }
+
+        .task-date {
+            color: #888;
+            font-size: 0.85rem;
+            min-width: 120px;
+            text-align: right;
+            margin-right: 15px;
+        }
+
+        .task-image {
+            max-width: 80px;
+            max-height: 80px;
+            margin: 0 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .task-image:hover {
+            transform: scale(1.05);
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #888;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #ddd;
+        }
+
+        .empty-state p {
+            font-size: 1.2rem;
+        }
+
+        .image-upload {
+            margin: 15px 0;
+            padding: 20px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            text-align: center;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .image-upload:hover {
+            border-color: var(--primary-color);
+            background-color: #f8f9fa;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            margin: 15px auto;
+            display: block;
+            border-radius: 5px;
+        }
+
+        .paste-area {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+            margin: 15px 0;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            transition: var(--transition);
+        }
+
+        .paste-area.highlight {
+            border-color: var(--primary-color);
+            background-color: #e3f2fd;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 90%;
+            max-height: 90%;
+            position: relative;
+        }
+
+        .modal-image {
+            max-width: 100%;
+            max-height: 80vh;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 2rem;
+            cursor: pointer;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .back-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            z-index: 1000;
+            transition: var(--transition);
+        }
+
+        .back-to-top:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-3px);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 5px;
+            color: white;
+            font-weight: 500;
+            box-shadow: var(--shadow);
+            z-index: 3000;
+            transform: translateX(200%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background-color: var(--success-color);
+        }
+
+        .notification.error {
+            background-color: var(--danger-color);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .form-row {
+                flex-direction: column;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .todo-item {
+                flex-wrap: wrap;
+            }
+
+            .task-date {
+                width: 100%;
+                text-align: left;
+                margin-top: 10px;
+                order: 2;
+                margin-right: 0;
+            }
+
+            .actions {
+                margin-left: auto;
+            }
+
+            .stat-item {
+                min-width: 100px;
+            }
+
+            .stat-value {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header h1 {
+                font-size: 1.5rem;
+            }
+
+            .tab {
+                padding: 12px 15px;
+                font-size: 0.9rem;
+            }
+
+            .card-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .task-number {
+                margin-right: 10px;
+            }
+
+            .task-image {
+                max-width: 60px;
+                max-height: 60px;
+                margin: 0 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-tasks"></i> 任务管理系统</h1>
+        </header>
+
+        <div class="stats-card">
+            <div class="stat-item">
+                <div class="stat-value" id="pending-count">{{ todos|selectattr('completed', 'equalto', False)|list|length }}</div>
+                <div class="stat-label">待办任务</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="completed-count">{{ todos|selectattr('completed', 'equalto', True)|list|length }}</div>
+                <div class="stat-label">已完成</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="total-count">{{ todos|length }}</div>
+                <div class="stat-label">总任务数</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title"><i class="fas fa-plus-circle"></i> 添加新任务</h2>
+            </div>
+            <form action="/add" method="POST" enctype="multipart/form-data" id="add-task-form">
+                <div class="form-group">
+                    <input type="text" name="content" placeholder="输入新的任务..." required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <div class="image-upload" id="image-upload-area">
+                        <i class="fas fa-cloud-upload-alt fa-2x"></i>
+                        <p>点击选择图片或拖拽图片到此处</p>
+                        <input type="file" id="image-file" name="image" accept="image/*" style="display: none;">
+                    </div>
+                </div>
+                <div class="paste-area" id="paste-area">
+                    <i class="fas fa-paste fa-2x"></i>
+                    <p>或者粘贴截图：<br>截图后按 Ctrl+V (Windows) 或 Cmd+V (Mac) 粘贴图片</p>
+                    <img id="preview-image" class="image-preview" style="display: none;">
+                    <input type="hidden" id="pasted-image" name="pasted_image">
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> 添加任务</button>
+            </form>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="pending">
+                <i class="fas fa-list"></i> 待办工作区
+            </button>
+            <button class="tab" data-tab="completed">
+                <i class="fas fa-check-circle"></i> 已完成工作区
+            </button>
+            <button class="tab" data-tab="info">
+                <i class="fas fa-info-circle"></i> 使用说明
+            </button>
+        </div>
+
+        <div class="tab-content active" id="pending-tab">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-list"></i> 待办工作区</h2>
+                </div>
+                <div class="controls">
+                    <div class="sort-controls">
+                        <span class="control-label">排序:</span>
+                        <button class="btn btn-outline sort-btn active" data-sort="newest">
+                            <i class="fas fa-sort-amount-down"></i> 最新优先
+                        </button>
+                        <button class="btn btn-outline sort-btn" data-sort="oldest">
+                            <i class="fas fa-sort-amount-up"></i> 最早优先
+                        </button>
+                    </div>
+                </div>
+                {% set pending_todos = todos|selectattr('completed', 'equalto', False)|list %}
+                {% if pending_todos %}
+                    <ul class="todo-list" id="pending-tasks">
+                        {% for todo in pending_todos|sort(attribute='created_at', reverse=True) %}
+                        <li class="todo-item" data-created="{{ todo.created_at }}">
+                            <div class="task-number">{{ loop.index }}</div>
+                            <div class="todo-checkbox">
+                                <input type="checkbox" onchange="completeTask({{ todo.id }})">
+                            </div>
+                            <div class="todo-content">
+                                <div>{{ todo.content }}</div>
+                                {% if todo.image_path %}
+                                    <img src="{{ url_for('static', filename=todo.image_path) }}" alt="任务图片" class="task-image" onclick="showImageModal(this.src)">
+                                {% endif %}
+                            </div>
+                            <div class="task-date">{{ todo.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                            <div class="actions">
+                                <button class="btn btn-success" onclick="completeTask({{ todo.id }})">
+                                    <i class="fas fa-check"></i> 完成
+                                </button>
+                                <button class="btn btn-outline" onclick="deleteTask({{ todo.id }})">
+                                    <i class="fas fa-trash"></i> 删除
+                                </button>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-clipboard-list"></i>
+                        <p>暂无待办任务</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="tab-content" id="completed-tab">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-check-circle"></i> 已完成工作区</h2>
+                </div>
+                <div class="controls">
+                    <div class="sort-controls">
+                        <span class="control-label">排序:</span>
+                        <button class="btn btn-outline sort-btn active" data-sort="newest">
+                            <i class="fas fa-sort-amount-down"></i> 最新优先
+                        </button>
+                        <button class="btn btn-outline sort-btn" data-sort="oldest">
+                            <i class="fas fa-sort-amount-up"></i> 最早优先
+                        </button>
+                    </div>
+                </div>
+                {% set completed_todos = todos|selectattr('completed', 'equalto', True)|list %}
+                {% if completed_todos %}
+                    <ul class="todo-list" id="completed-tasks">
+                        {% for todo in completed_todos|sort(attribute='created_at', reverse=True) %}
+                        <li class="todo-item completed" data-created="{{ todo.created_at }}">
+                            <div class="task-number">{{ loop.index }}</div>
+                            <div class="todo-checkbox">
+                                <input type="checkbox" checked onchange="completeTask({{ todo.id }})">
+                            </div>
+                            <div class="todo-content completed">
+                                <div>{{ todo.content }}</div>
+                                {% if todo.image_path %}
+                                    <img src="{{ url_for('static', filename=todo.image_path) }}" alt="任务图片" class="task-image" onclick="showImageModal(this.src)">
+                                {% endif %}
+                            </div>
+                            <div class="task-date">{{ todo.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                            <div class="actions">
+                                <button class="btn btn-warning" onclick="completeTask({{ todo.id }})">
+                                    <i class="fas fa-undo"></i> 取消完成
+                                </button>
+                                <button class="btn btn-outline" onclick="deleteTask({{ todo.id }})">
+                                    <i class="fas fa-trash"></i> 删除
+                                </button>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-check"></i>
+                        <p>暂无已完成任务</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="tab-content" id="info-tab">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-info-circle"></i> 使用说明</h2>
+                </div>
+                <div>
+                    <h3><i class="fas fa-star"></i> 功能介绍</h3>
+                    <ul>
+                        <li><strong>添加任务</strong>：在顶部输入框中输入新任务内容，点击"添加任务"按钮</li>
+                        <li><strong>标记完成</strong>：点击任务后的"完成"按钮将任务移至已完成区域</li>
+                        <li><strong>取消完成</strong>：在已完成区域中点击"取消完成"按钮将任务移回待办区域</li>
+                        <li><strong>删除任务</strong>：点击任务后的"删除"按钮将弹出确认框，确认后删除任务</li>
+                        <li><strong>排序任务</strong>：在每个区域中可以按创建时间排序任务（最新优先或最早优先）</li>
+                        <li><strong>行号显示</strong>：每个任务前显示行号，便于快速定位和引用</li>
+                        <li><strong>图片功能</strong>：可以为任务添加图片，便于更直观地记录任务信息</li>
+                        <li><strong>粘贴图片</strong>：支持直接粘贴截图，无需保存文件到本地</li>
+                        <li><strong>拖拽上传</strong>：支持拖拽图片文件到上传区域直接上传</li>
+                        <li><strong>时间显示</strong>：所有任务时间均以北京时间显示</li>
+                    </ul>
+
+                    <h3><i class="fas fa-th-large"></i> 区域说明</h3>
+                    <ul>
+                        <li><strong>待办工作区</strong>：显示所有未完成的任务</li>
+                        <li><strong>已完成工作区</strong>：显示所有已完成的任务</li>
+                    </ul>
+
+                    <h3><i class="fas fa-exclamation-triangle"></i> 注意事项</h3>
+                    <ul>
+                        <li>当前系统中删除的任务会从列表中永久移除</li>
+                        <li>输入框已禁用自动完成，确保您的任务内容不会被浏览器记录</li>
+                        <li>标签页使用了粘性定位，当滚动到页面顶部时会自动固定</li>
+                        <li>可以为任务添加图片，支持的格式包括：PNG、JPG、JPEG、GIF</li>
+                        <li>支持直接粘贴截图，截图后使用 Ctrl+V (Windows) 或 Cmd+V (Mac) 粘贴</li>
+                        <li>支持拖拽上传图片，直接将图片文件拖拽到上传区域即可</li>
+                        <li>所有时间均以北京时间显示，确保时间一致性</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图片查看模态框 -->
+    <div class="modal" id="imageModal">
+        <span class="close-modal" onclick="closeImageModal()">&times;</span>
+        <div class="modal-content">
+            <img id="modalImage" class="modal-image">
+        </div>
+    </div>
+
+    <!-- 删除确认模态框 -->
+    <div class="modal" id="deleteConfirmModal">
+        <div class="modal-content" style="background-color: white; border-radius: 10px; padding: 30px; max-width: 500px; width: 90%;">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: var(--warning-color); margin-bottom: 15px;"></i>
+                <h2 style="margin-bottom: 10px; color: var(--dark-color);">确认删除</h2>
+                <p style="color: #666; font-size: 1.1rem;">您确定要删除这个任务吗？此操作无法撤销。</p>
+            </div>
+            <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px;">
+                <button class="btn btn-outline" onclick="closeDeleteModal()" style="padding: 12px 24px;">
+                    <i class="fas fa-times"></i> 取消
+                </button>
+                <button class="btn btn-danger" id="confirmDeleteBtn" style="padding: 12px 24px;">
+                    <i class="fas fa-trash"></i> 确认删除
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 返回顶部按钮 -->
+    <button class="back-to-top" id="backToTop">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <!-- 通知 -->
+    <div class="notification" id="notification"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            const backToTopButton = document.getElementById('backToTop');
+            const pasteArea = document.getElementById('paste-area');
+            const previewImage = document.getElementById('preview-image');
+            const pastedImageInput = document.getElementById('pasted-image');
+            const imageUploadArea = document.getElementById('image-upload-area');
+            const imageFileInput = document.getElementById('image-file');
+
+            // 标签页切换功能
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // 移除所有标签的活动状态
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(tc => tc.classList.remove('active'));
+
+                    // 为当前标签添加活动状态
+                    tab.classList.add('active');
+                    const tabId = tab.getAttribute('data-tab');
+                    document.getElementById(`${tabId}-tab`).classList.add('active');
+                });
+            });
+
+            // 图片上传区域点击事件
+            imageUploadArea.addEventListener('click', function() {
+                imageFileInput.click();
+            });
+
+            // 文件选择事件
+            imageFileInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewImage.src = e.target.result;
+                        previewImage.style.display = 'block';
+                        // 清除粘贴的图片数据
+                        pastedImageInput.value = '';
+                    }
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+
+            // 拖拽上传功能
+            imageUploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.style.borderColor = '#3498db';
+                this.style.backgroundColor = '#e3f2fd';
+            });
+
+            imageUploadArea.addEventListener('dragleave', function() {
+                this.style.borderColor = '#ddd';
+                this.style.backgroundColor = '#f9f9f9';
+            });
+
+            imageUploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.style.borderColor = '#ddd';
+                this.style.backgroundColor = '#f9f9f9';
+
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    const file = e.dataTransfer.files[0];
+                    if (file.type.startsWith('image/')) {
+                        imageFileInput.files = e.dataTransfer.files;
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            previewImage.src = e.target.result;
+                            previewImage.style.display = 'block';
+                            // 清除粘贴的图片数据
+                            pastedImageInput.value = '';
+                        }
+                        reader.readAsDataURL(file);
+                    } else {
+                        showNotification('请选择图片文件', 'error');
+                    }
+                }
+            });
+
+            // 粘贴图片功能
+            document.addEventListener('paste', function(event) {
+                const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1) {
+                        const blob = items[i].getAsFile();
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            // 显示预览
+                            previewImage.src = event.target.result;
+                            previewImage.style.display = 'block';
+
+                            // 将图片数据存储在隐藏字段中
+                            pastedImageInput.value = event.target.result;
+
+                            // 高亮粘贴区域
+                            pasteArea.classList.add('highlight');
+                            setTimeout(() => {
+                                pasteArea.classList.remove('highlight');
+                            }, 1000);
+
+                            // 显示通知
+                            showNotification('图片已粘贴，提交任务即可保存', 'success');
+
+                            // 清除文件上传的图片
+                            imageFileInput.value = '';
+                        };
+                        reader.readAsDataURL(blob);
+                        break;
+                    }
+                }
+            });
+
+            // 返回顶部按钮功能
+            window.addEventListener('scroll', function() {
+                if (window.pageYOffset > 300) {
+                    backToTopButton.style.display = 'flex';
+                } else {
+                    backToTopButton.style.display = 'none';
+                }
+            });
+
+            backToTopButton.addEventListener('click', function() {
+                window.scrollTo({top: 0, behavior: 'smooth'});
+            });
+
+            // 图片查看模态框功能
+            window.showImageModal = function(src) {
+                document.getElementById('imageModal').style.display = 'flex';
+                document.getElementById('modalImage').src = src;
+            }
+
+            window.closeImageModal = function() {
+                document.getElementById('imageModal').style.display = 'none';
+            }
+
+            // 点击模态框背景关闭模态框
+            document.getElementById('imageModal').addEventListener('click', function(event) {
+                if (event.target === this) {
+                    closeImageModal();
+                }
+            });
+
+            // 任务完成/取消完成功能
+            window.completeTask = function(todoId) {
+                fetch(`/complete/${todoId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        '_method': 'POST'
+                    })
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Network response was not ok.');
+                })
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        showNotification(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('网络错误，请重试', 'error');
+                });
+            };
+
+            // 删除任务功能
+            let deleteTaskId = null;
+            
+            window.deleteTask = function(todoId) {
+                deleteTaskId = todoId;
+                document.getElementById('deleteConfirmModal').style.display = 'flex';
+            };
+            
+            window.closeDeleteModal = function() {
+                document.getElementById('deleteConfirmModal').style.display = 'none';
+                deleteTaskId = null;
+            };
+            
+            document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+                if (deleteTaskId) {
+                    fetch(`/delete/${deleteTaskId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: new URLSearchParams({
+                            '_method': 'POST'
+                        })
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        }
+                        throw new Error('Network response was not ok.');
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            showNotification(data.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showNotification('网络错误，请重试', 'error');
+                    })
+                    .finally(() => {
+                        closeDeleteModal();
+                    });
+                }
+            });
+            
+            // 点击模态框背景关闭删除确认模态框
+            document.getElementById('deleteConfirmModal').addEventListener('click', function(event) {
+                if (event.target === this) {
+                    closeDeleteModal();
+                }
+            });
+
+            // 显示通知功能
+            window.showNotification = function(message, type) {
+                const notification = document.getElementById('notification');
+                notification.textContent = message;
+                notification.className = 'notification ' + type + ' show';
+
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            };
+
+            // 表单提交处理
+            document.getElementById('add-task-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const formData = new FormData(this);
+
+                fetch('/add', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Network response was not ok.');
+                })
+                .then(data => {
+                    if (data.success) {
+                        showNotification(data.message, 'success');
+                        // 清空表单
+                        this.reset();
+                        previewImage.style.display = 'none';
+                        pastedImageInput.value = '';
+                        // 重新加载页面以显示新任务
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        showNotification(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('网络错误，请重试', 'error');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

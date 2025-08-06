@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>待办事项</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+            position: -webkit-sticky;
+            position: sticky;
+            top: 0;
+            background-color: white;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #f1f1f1;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background-color: #007bff;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .section {
+            margin-bottom: 20px;
+            padding: 15px;
+        }
+        .todo-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .todo-item.completed {
+            background-color: #f0f0f0;
+        }
+        .todo-content {
+            flex-grow: 1;
+            margin: 0 10px;
+        }
+        .completed .todo-content {
+            text-decoration: line-through;
+            color: #888;
+        }
+        .btn {
+            margin: 0 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 3px;
+        }
+        .complete-btn {
+            background-color: #28a745;
+            color: white;
+        }
+        .uncomplete-btn {
+            background-color: #ffc107;
+            color: black;
+        }
+        .delete-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+        .restore-btn {
+            background-color: #17a2b8;
+            color: white;
+        }
+        form {
+            margin: 20px 0;
+        }
+        input[type="text"] {
+            padding: 8px;
+            width: 70%;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+        input[type="submit"] {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .stats {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .empty-message {
+            text-align: center;
+            color: #888;
+            font-style: italic;
+            padding: 20px;
+        }
+        .sort-controls {
+            margin-bottom: 15px;
+            text-align: right;
+        }
+        .sort-btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            margin-left: 5px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .sort-btn.active {
+            background-color: #007bff;
+        }
+        .task-number {
+            font-weight: bold;
+            color: #007bff;
+            min-width: 30px;
+            text-align: center;
+            margin-right: 10px;
+        }
+        .task-date {
+            margin-right: 10px;
+            color: #888;
+            font-size: 0.9em;
+            min-width: 120px;
+            text-align: right;
+        }
+        /* 返回顶部按钮样式 */
+        .back-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+        .back-to-top:hover {
+            background-color: #0056b3;
+        }
+        /* 分页样式 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            gap: 5px;
+        }
+        .pagination button {
+            padding: 8px 12px;
+            background-color: #f1f1f1;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        .pagination button.active {
+            background-color: #007bff;
+            color: white;
+        }
+        .pagination button:hover:not(.active) {
+            background-color: #ddd;
+        }
+        .pagination button:disabled {
+            background-color: #f1f1f1;
+            color: #ccc;
+            cursor: not-allowed;
+        }
+        .items-per-page {
+            margin-bottom: 15px;
+            text-align: right;
+        }
+        .items-per-page select {
+            padding: 5px;
+            border-radius: 3px;
+            border: 1px solid #ddd;
+        }
+        /* 图片相关样式 */
+        .image-upload {
+            margin: 10px 0;
+        }
+        .image-preview {
+            max-width: 200px;
+            max-height: 200px;
+            margin: 10px 0;
+            display: block;
+        }
+        .task-image {
+            max-width: 100px;
+            max-height: 100px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .image-container {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        /* 粘贴图片提示样式 */
+        .paste-area {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+            margin: 10px 0;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .paste-area.highlight {
+            border-color: #007bff;
+            background-color: #e3f2fd;
+        }
+    </style>
+</head>
+<body>
+    <h1>任务管理系统</h1>
+    
+    <div class="stats">
+        <p>待办任务: <span id="pending-count">{{ todos|selectattr('completed', 'equalto', False)|list|length }}</span> | 
+           已完成: <span id="completed-count">{{ todos|selectattr('completed', 'equalto', True)|list|length }}</span> | 
+           总计: <span id="total-count">{{ todos|length }}</span></p>
+    </div>
+    
+    <div class="section">
+        <h2>添加新任务</h2>
+        <form action="/add" method="POST" enctype="multipart/form-data" id="add-task-form">
+            <input type="text" name="content" placeholder="输入新的任务..." required autocomplete="off">
+            <div class="image-upload">
+                <label for="image-file">上传图片:</label>
+                <input type="file" id="image-file" name="image" accept="image/*">
+            </div>
+            <div class="paste-area" id="paste-area">
+                <p>或者粘贴截图：<br>截图后按 Ctrl+V (Windows) 或 Cmd+V (Mac) 粘贴图片</p>
+                <img id="preview-image" class="image-preview" style="display: none;">
+                <input type="hidden" id="pasted-image" name="pasted_image">
+            </div>
+            <input type="submit" value="添加任务">
+        </form>
+    </div>
+    
+    <div class="tabs">
+        <div class="tab active" data-tab="pending">待办工作区</div>
+        <div class="tab" data-tab="completed">已完成工作区</div>
+        <div class="tab" data-tab="info">说明</div>
+    </div>
+    
+    <div class="tab-content active" id="pending-tab">
+        <div class="section">
+            <h2>待办工作区</h2>
+            <div class="sort-controls">
+                <span>排序:</span>
+                <button class="sort-btn active" data-sort="newest">最新优先</button>
+                <button class="sort-btn" data-sort="oldest">最早优先</button>
+            </div>
+            <div class="items-per-page">
+                <span>每页显示:</span>
+                <select id="pending-items-per-page">
+                    <option value="5">5条</option>
+                    <option value="10" selected>10条</option>
+                    <option value="20">20条</option>
+                    <option value="50">50条</option>
+                </select>
+            </div>
+            {% set pending_todos = todos|selectattr('completed', 'equalto', False)|list %}
+            {% if pending_todos %}
+                <div id="pending-tasks-container">
+                    <div id="pending-tasks">
+                        {% for todo in pending_todos|sort(attribute='created_at', reverse=True) %}
+                        <div class="todo-item" data-created="{{ todo.created_at }}">
+                            <div class="task-number">{{ loop.index }}</div>
+                            <div class="image-container">
+                                <span class="todo-content">{{ todo.content }}</span>
+                                {% if todo.image_path %}
+                                    <img src="{{ url_for('static', filename=todo.image_path) }}" alt="任务图片" class="task-image" onclick="showImageModal(this.src)">
+                                {% endif %}
+                            </div>
+                            <div class="task-date">{{ todo.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                            <form action="/complete/{{ todo.id }}" method="POST" style="display: inline;">
+                                <input type="submit" value="标记完成" class="btn complete-btn">
+                            </form>
+                            <form action="/delete/{{ todo.id }}" method="POST" style="display: inline;">
+                                <input type="submit" value="删除" class="btn delete-btn">
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="pagination" id="pending-pagination"></div>
+                </div>
+            {% else %}
+                <div class="empty-message">暂无待办任务</div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="tab-content" id="completed-tab">
+        <div class="section">
+            <h2>已完成工作区</h2>
+            <div class="sort-controls">
+                <span>排序:</span>
+                <button class="sort-btn active" data-sort="newest">最新优先</button>
+                <button class="sort-btn" data-sort="oldest">最早优先</button>
+            </div>
+            <div class="items-per-page">
+                <span>每页显示:</span>
+                <select id="completed-items-per-page">
+                    <option value="5">5条</option>
+                    <option value="10" selected>10条</option>
+                    <option value="20">20条</option>
+                    <option value="50">50条</option>
+                </select>
+            </div>
+            {% set completed_todos = todos|selectattr('completed', 'equalto', True)|list %}
+            {% if completed_todos %}
+                <div id="completed-tasks-container">
+                    <div id="completed-tasks">
+                        {% for todo in completed_todos|sort(attribute='created_at', reverse=True) %}
+                        <div class="todo-item completed" data-created="{{ todo.created_at }}">
+                            <div class="task-number">{{ loop.index }}</div>
+                            <div class="image-container">
+                                <span class="todo-content">{{ todo.content }}</span>
+                                {% if todo.image_path %}
+                                    <img src="{{ url_for('static', filename=todo.image_path) }}" alt="任务图片" class="task-image" onclick="showImageModal(this.src)">
+                                {% endif %}
+                            </div>
+                            <div class="task-date">{{ todo.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                            <form action="/complete/{{ todo.id }}" method="POST" style="display: inline;">
+                                <input type="submit" value="取消完成" class="btn uncomplete-btn">
+                            </form>
+                            <form action="/delete/{{ todo.id }}" method="POST" style="display: inline;">
+                                <input type="submit" value="删除" class="btn delete-btn">
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="pagination" id="completed-pagination"></div>
+                </div>
+            {% else %}
+                <div class="empty-message">暂无已完成任务</div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="tab-content" id="info-tab">
+        <div class="section">
+            <h2>使用说明</h2>
+            <p>欢迎使用任务管理系统！本系统帮助您更好地管理日常任务。</p>
+            
+            <h3>功能介绍</h3>
+            <ul>
+                <li><strong>添加任务</strong>：在顶部输入框中输入新任务内容，点击"添加任务"按钮</li>
+                <li><strong>标记完成</strong>：在待办工作区中点击"标记完成"按钮将任务移至已完成区域</li>
+                <li><strong>取消完成</strong>：在已完成区域中点击"取消完成"按钮将任务移回待办区域</li>
+                <li><strong>删除任务</strong>：点击任意任务后的"删除"按钮将任务删除</li>
+                <li><strong>排序任务</strong>：在每个区域中可以按创建时间排序任务（最新优先或最早优先）</li>
+                <li><strong>行号显示</strong>：每个任务前显示行号，便于快速定位和引用</li>
+                <li><strong>分页功能</strong>：任务列表分页显示，可选择每页显示的任务数量</li>
+                <li><strong>返回顶部</strong>：页面底部提供快速返回顶部按钮</li>
+                <li><strong>隐私保护</strong>：输入框已禁用自动完成功能，防止敏感信息被记录</li>
+                <li><strong>粘性标签页</strong>：当标签页滚动到页面顶部时会自动固定</li>
+                <li><strong>图片功能</strong>：可以为任务添加图片，便于更直观地记录任务信息</li>
+                <li><strong>粘贴图片</strong>：支持直接粘贴截图，无需保存文件到本地</li>
+            </ul>
+            
+            <h3>区域说明</h3>
+            <ul>
+                <li><strong>待办工作区</strong>：显示所有未完成的任务</li>
+                <li><strong>已完成工作区</strong>：显示所有已完成的任务</li>
+            </ul>
+            
+            <h3>注意事项</h3>
+            <ul>
+                <li>当前系统中删除的任务会从列表中永久移除</li>
+                <li>如果您需要回收站功能，建议扩展数据库模型以支持该功能</li>
+                <li>输入框已禁用自动完成，确保您的任务内容不会被浏览器记录</li>
+                <li>标签页使用了粘性定位，当滚动到页面顶部时会自动固定</li>
+                <li>可以为任务添加图片，支持的格式包括：PNG、JPG、JPEG、GIF</li>
+                <li>支持直接粘贴截图，截图后使用 Ctrl+V (Windows) 或 Cmd+V (Mac) 粘贴</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 图片查看模态框 -->
+    <div id="imageModal" style="display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9);">
+        <span onclick="closeImageModal()" style="position: absolute; top: 20px; right: 35px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer;">&times;</span>
+        <img id="modalImage" style="margin: auto; display: block; width: 80%; max-width: 700px; margin-top: 100px;">
+    </div>
+
+    <!-- 返回顶部按钮 -->
+    <button class="back-to-top" id="backToTop">↑</button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            const backToTopButton = document.getElementById('backToTop');
+            const pasteArea = document.getElementById('paste-area');
+            const previewImage = document.getElementById('preview-image');
+            const pastedImageInput = document.getElementById('pasted-image');
+            
+            // 标签页切换功能
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // 移除所有标签的活动状态
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(tc => tc.classList.remove('active'));
+                    
+                    // 为当前标签添加活动状态
+                    tab.classList.add('active');
+                    const tabId = tab.getAttribute('data-tab');
+                    document.getElementById(`${tabId}-tab`).classList.add('active');
+                    
+                    // 初始化分页
+                    if (tabId === 'pending') {
+                        initializePagination('pending');
+                    } else if (tabId === 'completed') {
+                        initializePagination('completed');
+                    }
+                });
+            });
+            
+            // 粘贴图片功能
+            document.addEventListener('paste', function(event) {
+                const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1) {
+                        const blob = items[i].getAsFile();
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            // 显示预览
+                            previewImage.src = event.target.result;
+                            previewImage.style.display = 'block';
+                            
+                            // 将图片数据存储在隐藏字段中
+                            pastedImageInput.value = event.target.result;
+                            
+                            // 高亮粘贴区域
+                            pasteArea.classList.add('highlight');
+                            setTimeout(() => {
+                                pasteArea.classList.remove('highlight');
+                            }, 1000);
+                        };
+                        reader.readAsDataURL(blob);
+                        break;
+                    }
+                }
+            });
+            
+            // 表单提交前的处理
+            document.getElementById('add-task-form').addEventListener('submit', function(event) {
+                // 如果有粘贴的图片，但没有选择文件，则阻止默认提交行为
+                if (pastedImageInput.value && !document.getElementById('image-file').value) {
+                    event.preventDefault();
+                    
+                    // 创建一个包含图片数据的表单数据对象
+                    const formData = new FormData(this);
+                    
+                    // 发送 AJAX 请求
+                    fetch('/add', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => {
+                        if (response.redirected) {
+                            window.location.href = response.url;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+                }
+            });
+            
+            // 排序功能
+            const sortButtons = document.querySelectorAll('.sort-btn');
+            sortButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const sortType = this.getAttribute('data-sort');
+                    const section = this.closest('.section');
+                    const sortButtonsInGroup = section.querySelectorAll('.sort-btn');
+                    const tasksContainer = section.querySelector('[id$="-tasks"]');
+                    
+                    // 更新按钮状态
+                    sortButtonsInGroup.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    if (tasksContainer) {
+                        const tasks = Array.from(tasksContainer.children);
+                        tasks.sort((a, b) => {
+                            const dateA = new Date(a.getAttribute('data-created'));
+                            const dateB = new Date(b.getAttribute('data-created'));
+                            
+                            if (sortType === 'newest') {
+                                return dateB - dateA;
+                            } else {
+                                return dateA - dateB;
+                            }
+                        });
+                        
+                        // 重新插入排序后的任务
+                        tasks.forEach(task => tasksContainer.appendChild(task));
+                        
+                        // 更新行号和分页
+                        updateTaskNumbers(tasksContainer);
+                        const containerId = tasksContainer.id.replace('-tasks', '');
+                        initializePagination(containerId);
+                    }
+                });
+            });
+            
+            // 每页显示数量变化
+            document.getElementById('pending-items-per-page').addEventListener('change', function() {
+                initializePagination('pending');
+            });
+            
+            document.getElementById('completed-items-per-page').addEventListener('change', function() {
+                initializePagination('completed');
+            });
+            
+            // 返回顶部按钮功能
+            window.addEventListener('scroll', function() {
+                if (window.pageYOffset > 300) {
+                    backToTopButton.style.display = 'flex';
+                } else {
+                    backToTopButton.style.display = 'none';
+                }
+            });
+            
+            backToTopButton.addEventListener('click', function() {
+                window.scrollTo({top: 0, behavior: 'smooth'});
+            });
+            
+            // 更新任务行号的函数
+            function updateTaskNumbers(container) {
+                const tasks = container.querySelectorAll('.todo-item');
+                tasks.forEach((task, index) => {
+                    const numberElement = task.querySelector('.task-number');
+                    if (numberElement) {
+                        numberElement.textContent = index + 1;
+                    }
+                });
+            }
+            
+            // 分页功能
+            function initializePagination(type) {
+                const itemsPerPageSelect = document.getElementById(`${type}-items-per-page`);
+                const itemsPerPage = parseInt(itemsPerPageSelect.value);
+                const tasksContainer = document.getElementById(`${type}-tasks`);
+                const paginationContainer = document.getElementById(`${type}-pagination`);
+                
+                if (!tasksContainer || !paginationContainer) return;
+                
+                const tasks = Array.from(tasksContainer.children);
+                const totalPages = Math.ceil(tasks.length / itemsPerPage);
+                
+                // 清空分页容器
+                paginationContainer.innerHTML = '';
+                
+                // 如果只有一页，不显示分页
+                if (totalPages <= 1) return;
+                
+                // 创建分页按钮
+                const createPageButton = (text, page, isDisabled = false) => {
+                    const button = document.createElement('button');
+                    button.textContent = text;
+                    button.disabled = isDisabled;
+                    if (!isDisabled) {
+                        button.addEventListener('click', () => {
+                            showPage(type, page, itemsPerPage);
+                            updatePaginationButtons(type, page, totalPages);
+                        });
+                    }
+                    return button;
+                };
+                
+                // 上一页按钮
+                const prevButton = createPageButton('«', 1, true);
+                prevButton.id = `${type}-prev`;
+                paginationContainer.appendChild(prevButton);
+                
+                // 页码按钮
+                for (let i = 1; i <= totalPages; i++) {
+                    const pageButton = createPageButton(i, i);
+                    pageButton.id = `${type}-page-${i}`;
+                    if (i === 1) {
+                        pageButton.classList.add('active');
+                    }
+                    paginationContainer.appendChild(pageButton);
+                }
+                
+                // 下一页按钮
+                const nextButton = createPageButton('»', 2);
+                nextButton.id = `${type}-next`;
+                paginationContainer.appendChild(nextButton);
+                
+                // 显示第一页
+                showPage(type, 1, itemsPerPage);
+            }
+            
+            function showPage(type, page, itemsPerPage) {
+                const tasksContainer = document.getElementById(`${type}-tasks`);
+                const tasks = Array.from(tasksContainer.children);
+                
+                // 隐藏所有任务
+                tasks.forEach(task => {
+                    task.style.display = 'none';
+                });
+                
+                // 显示当前页的任务
+                const startIndex = (page - 1) * itemsPerPage;
+                const endIndex = startIndex + itemsPerPage;
+                for (let i = startIndex; i < endIndex && i < tasks.length; i++) {
+                    tasks[i].style.display = 'flex';
+                }
+            }
+            
+            function updatePaginationButtons(type, currentPage, totalPages) {
+                // 更新活动状态
+                for (let i = 1; i <= totalPages; i++) {
+                    const pageButton = document.getElementById(`${type}-page-${i}`);
+                    if (pageButton) {
+                        if (i === currentPage) {
+                            pageButton.classList.add('active');
+                        } else {
+                            pageButton.classList.remove('active');
+                        }
+                    }
+                }
+                
+                // 更新上一页和下一页按钮
+                const prevButton = document.getElementById(`${type}-prev`);
+                const nextButton = document.getElementById(`${type}-next`);
+                
+                if (prevButton) {
+                    prevButton.disabled = currentPage === 1;
+                    prevButton.onclick = () => {
+                        if (currentPage > 1) {
+                            showPage(type, currentPage - 1, parseInt(document.getElementById(`${type}-items-per-page`).value));
+                            updatePaginationButtons(type, currentPage - 1, totalPages);
+                        }
+                    };
+                }
+                
+                if (nextButton) {
+                    nextButton.disabled = currentPage === totalPages;
+                    nextButton.onclick = () => {
+                        if (currentPage < totalPages) {
+                            showPage(type, currentPage + 1, parseInt(document.getElementById(`${type}-items-per-page`).value));
+                            updatePaginationButtons(type, currentPage + 1, totalPages);
+                        }
+                    };
+                }
+            }
+            
+            // 图片查看模态框功能
+            window.showImageModal = function(src) {
+                document.getElementById('imageModal').style.display = 'block';
+                document.getElementById('modalImage').src = src;
+            }
+            
+            window.closeImageModal = function() {
+                document.getElementById('imageModal').style.display = 'none';
+            }
+            
+            // 点击模态框背景关闭模态框
+            document.getElementById('imageModal').addEventListener('click', function(event) {
+                if (event.target === this) {
+                    closeImageModal();
+                }
+            });
+            
+            // 初始化待办工作区分页
+            initializePagination('pending');
+        });
+    </script>
+</body>
+</html>
