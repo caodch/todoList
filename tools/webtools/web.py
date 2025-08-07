@@ -1,12 +1,53 @@
+#!/usr/bin/env python3
 # app.py
 from flask import Flask, render_template, request, redirect, url_for, jsonify
-from flask_sqlalchemy import SQLAlchemy
 import datetime
 import os
+import sys
 import base64
 from werkzeug.utils import secure_filename
 
-app = Flask(__name__, template_folder=os.path.abspath('templates'))
+# 添加导入语句以支持打包
+try:
+    import sqlalchemy
+except ImportError:
+    print("请安装SQLAlchemy: pip install SQLAlchemy")
+    sys.exit(1)
+
+try:
+    import flask_sqlalchemy
+except ImportError:
+    print("请安装Flask-SQLAlchemy: pip install Flask-SQLAlchemy")
+    sys.exit(1)
+
+# 检查是否为打包环境
+def is_frozen():
+    """检查是否为PyInstaller打包环境"""
+    return getattr(sys, 'frozen', False)
+
+# 处理打包后的资源路径
+def resource_path(relative_path):
+    """获取资源文件路径，支持打包后运行"""
+    try:
+        # PyInstaller创建的临时文件夹
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    
+    return os.path.join(base_path, relative_path)
+
+# 初始化Flask应用，显式指定静态文件夹
+if is_frozen():
+    # 打包环境
+    static_folder = os.path.join(os.path.dirname(sys.executable), 'static')
+    app = Flask(__name__, 
+                template_folder=resource_path('templates'),
+                static_folder=static_folder)
+else:
+    # 开发环境
+    app = Flask(__name__, 
+                template_folder=resource_path('templates'))
+
 # 配置数据库 URI，支持多种环境
 # 可以通过设置 DATABASE_URL 环境变量来配置数据库
 # SQLite 示例: sqlite:///todos.db
@@ -20,8 +61,16 @@ if database_url and database_url.startswith("postgres://"):
 # 如果没有设置 DATABASE_URL 环境变量，则使用默认的 SQLite 数据库
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url or 'sqlite:///todos.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 # 配置上传文件夹
-upload_folder = os.environ.get('UPLOAD_FOLDER') or os.path.join(os.path.abspath('.'), 'static', 'uploads')
+if is_frozen():
+    # 打包环境 - 使用可执行文件同级目录的static文件夹
+    base_dir = os.path.dirname(sys.executable)
+    upload_folder = os.path.join(base_dir, 'static', 'uploads')
+else:
+    # 开发环境
+    upload_folder = os.environ.get('UPLOAD_FOLDER') or os.path.join(os.path.abspath('.'), 'static', 'uploads')
+
 app.config['UPLOAD_FOLDER'] = upload_folder
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 限制上传文件大小为16MB
 
@@ -31,6 +80,8 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 # 允许上传的文件类型
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
+# 初始化数据库
+from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy(app)
 
 def allowed_file(filename):
@@ -114,9 +165,10 @@ def add():
             file = request.files['image']
             if file and file.filename != '' and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
-                # 添加时间戳以避免文件名冲突
+                # 添加时间戳以避免文件名冲突，同时保留原始扩展名
                 timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-                filename = f"{timestamp}_{filename}"
+                name, ext = os.path.splitext(filename)
+                filename = f"{timestamp}_{name}{ext}"  # 使用下划线分隔时间戳和原始文件名
                 file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 file.save(file_path)
                 # 保存相对于静态文件夹的路径
@@ -153,7 +205,16 @@ def delete(todo_id):
         if todo:
             # 如果任务有关联的图片，删除图片文件
             if todo.image_path:
-                image_file_path = os.path.join(os.path.abspath('.'), 'static', todo.image_path)
+                # 获取图片文件名
+                image_filename = todo.image_path.split('/')[-1]
+                # 构建完整路径
+                if is_frozen():
+                    # 打包环境
+                    image_file_path = os.path.join(os.path.dirname(sys.executable), 'static', 'uploads', image_filename)
+                else:
+                    # 开发环境
+                    image_file_path = os.path.join(os.path.abspath('.'), 'static', 'uploads', image_filename)
+                
                 if os.path.exists(image_file_path):
                     os.remove(image_file_path)
 
@@ -172,6 +233,6 @@ if __name__ == '__main__':
         # 只有在数据库文件不存在时才创建表
         db.create_all()
     # 获取环境变量中的端口，如果没有则使用默认端口 5002
-    port = int(os.environ.get('PORT', 5003))
+    port = int(os.environ.get('PORT', 5002))
     # 更改 host 为 0.0.0.0 以允许外部访问
     app.run(debug=False, host='0.0.0.0', port=port)

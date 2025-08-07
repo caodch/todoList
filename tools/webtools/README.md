@@ -27,6 +27,23 @@
 
 3. 访问地址：http://localhost:5002
 
+## 打包为可执行文件
+
+您可以将应用打包为独立的可执行文件，这样无需安装Python环境即可运行：
+
+1. 运行打包脚本：
+   ```bash
+   python package.py
+   ```
+
+2. 打包完成后，可执行文件将位于 `dist` 目录中：
+   - Windows: `dist/todo_app.exe`
+   - macOS/Linux: `dist/todo_app`
+
+3. 运行方式：
+   - Windows: 双击 `dist/run.bat` 或直接运行 `dist/todo_app.exe`
+   - macOS/Linux: 运行 `dist/run.sh` 或直接运行 `dist/todo_app`
+
 ## 数据库配置
 
 应用默认使用 SQLite 数据库，数据库文件为 `todos.db`。
@@ -57,6 +74,30 @@ export DATABASE_URL=postgresql://username:password@localhost:5432/database_name
 ```bash
 pip install psycopg2
 ```
+
+## 部署到服务器
+
+### Heroku 部署
+
+1. 创建 Heroku 应用
+2. 设置环境变量：
+   ```bash
+   heroku config:set FLASK_APP=web.py
+   ```
+3. 部署应用
+
+### 通用服务器部署
+
+1. 安装 Python 3.9+
+2. 安装依赖：
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. 设置环境变量
+4. 运行应用：
+   ```bash
+   python web.py
+   ```
 
 ## 部署方式
 
@@ -111,10 +152,18 @@ pip install psycopg2
 ├── templates/          # HTML 模板文件
 ├── static/             # 静态资源文件
 │   └── uploads/        # 上传的图片文件
-├── requirements.txt    # Python 依赖
-├── runtime.txt         # Python 运行时版本
-├── Procfile            # Heroku 配置文件
-└── README.md           # 项目说明文件
+├── web.py              # 主应用文件
+├── requirements.txt    # Python依赖
+├── README.md           # 说明文档
+├── Procfile            # Heroku配置文件
+├── runtime.txt         # Python版本要求
+├── deploy.sh           # Linux/macOS部署脚本
+├── deploy.bat          # Windows部署脚本
+├── package.py          # 打包脚本
+├── templates/          # HTML模板
+├── static/             # 静态文件
+│   └── uploads/        # 上传文件目录
+└── instance/           # 数据库文件目录
 ```
 
 ## 技术栈
